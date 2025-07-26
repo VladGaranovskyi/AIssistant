@@ -1,4 +1,4 @@
-package com.aissistant.demo.services;
+package com.aissistant.demo.services.Auth;
 
 import com.aissistant.demo.models.ERole;
 import com.aissistant.demo.models.Role;
@@ -14,11 +14,8 @@ import com.aissistant.demo.repositories.UserRepository;
 import com.aissistant.demo.security.jwt.JwtUtils;
 import com.aissistant.demo.security.services.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +25,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.HashSet;
 import java.util.List;
@@ -56,29 +52,15 @@ public class AuthService {
     @Autowired
     JwtUtils jwtUtils;
 
+    @Autowired
+    AuthValidator authValidator;
+
     public ResponseEntity<?> registerUser(SignupRequest signupRequest){
-        Set<String> errors = new HashSet<>();
 
-        if(userRepository.existsByUsername(signupRequest.getUsername())){
-            errors.add("Username is already taken");
-        }
-        if(userRepository.existsByEmail(signupRequest.getEmail())){
-            errors.add("Email is already taken");
-        }
-        if(signupRequest.getUsername().length() > 20){
-            errors.add("Username must be less than 20 characters");
-        }
-        if(signupRequest.getEmail().length() > 100){
-            errors.add("Email must be less than 100 characters");
-        }
-        // Check if email exists by trying to send verification code
-        if(signupRequest.getPassword().length() > 64 || signupRequest.getPassword().length() < 8){
-            errors.add("Password must be from 8 to 64 characters long");
-        }
+        ResponseEntity validated = authValidator.validateRegisterRequest(signupRequest);
 
-        if(errors.toArray().length > 0){
-            return ResponseEntity.badRequest()
-                    .body(new ErrorsResponse(errors));
+        if (!validated.getStatusCode().is2xxSuccessful()){
+            return validated; // Return errors if validation fails
         }
 
         User user = new User(
@@ -119,53 +101,6 @@ public class AuthService {
                         jwtCookie.toString()
                 ));
     }
-
-    public ResponseEntity<?> addPersonalData(AddPersonalDataRequest request, HttpServletRequest servletRequest){
-        // Check data for errors
-        Set<String> errors = new HashSet<>();
-
-        if(request.getFirstName().length() > 30){
-            errors.add("Your first name should be less than 30 characters");
-        }
-        if(request.getLastName().length() > 30){
-            errors.add("Your last name should be less than 30 characters");
-        }
-
-        // Get cookie
-        String cookie = jwtUtils.getJwtFromCookies(servletRequest);
-        if(cookie == null){
-            errors.add("You are not logged in");
-        }
-        String email = jwtUtils.getEmailFromJwtToken(cookie);
-
-        if(errors.toArray().length > 0){
-            return ResponseEntity.badRequest()
-                    .body(new ErrorsResponse(errors));
-        }
-
-
-        // Check user Data
-        Optional<User> user = userRepository.findByEmail(email);
-        if(isPersonalDataEqual(request, user)){
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("You didn't change the data yet tried to edit it"));
-        }
-        // Update user Data
-//        mongoTemplate.update(User.class)
-//                .matching(Criteria.where("email").is(email))
-//                .apply(new Update().set("firstName", request.getFirstName()).set("lastName", request.getLastName())
-//                        .set("age", request.getAge()).set("avatarId", request.getAvatarId()))
-//                .first();
-        user.get().setFirstName(request.getFirstName());
-        user.get().setLastName(request.getLastName());
-        user.get().setAge(request.getAge());
-        user.get().setAvatarId(request.getAvatarId());
-
-        userRepository.save(user.get());
-
-        return ResponseEntity.ok(new MessageResponse("added personal information"));
-    }
-
     public ResponseEntity<?> logoutUser(HttpServletRequest servletRequest){
         ResponseCookie jwtCookie = jwtUtils.getCleanJwtCookie();
 
@@ -183,17 +118,6 @@ public class AuthService {
         String email = jwtUtils.getEmailFromJwtToken(cookie);
 
         return userRepository.findByEmail(email);
-    }
-
-    private boolean isPersonalDataEqual(AddPersonalDataRequest request, Optional<User> user){
-        return user.get().getFirstName() != null &&
-                user.get().getLastName() != null &&
-                user.get().getAge() != 0 &&
-                user.get().getAvatarId() != 0 &&
-                user.get().getFirstName().equals(request.getFirstName()) &&
-                user.get().getLastName().equals(request.getLastName()) &&
-                user.get().getAge() == request.getAge() &&
-                user.get().getAvatarId() == request.getAvatarId();
     }
 
     public boolean isAdmin(HttpServletRequest servletRequest){

@@ -5,7 +5,7 @@ import com.aissistant.demo.payload.request.AddPersonalDataRequest;
 import com.aissistant.demo.payload.request.LoginRequest;
 import com.aissistant.demo.payload.request.SignupRequest;
 import com.aissistant.demo.payload.response.MessageResponse;
-import com.aissistant.demo.services.AuthService;
+import com.aissistant.demo.services.Auth.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,20 +32,12 @@ public class AuthController {
         return authService.registerUser(signupRequest);
     }
 
-    @PostMapping("/add_personal_data")
-    public ResponseEntity<?> addPersonalData(@Valid @RequestBody AddPersonalDataRequest addPersonalDataRequest, HttpServletRequest request){
-        return authService.addPersonalData(addPersonalDataRequest, request);
-    }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(HttpServletRequest request){
         return authService.logoutUser(request);
     }
 
-    @GetMapping("/my_user_data")
-    public ResponseEntity<Optional<User>> getUser(HttpServletRequest request){
-        return new ResponseEntity<Optional<User>>(authService.getUserDataFromCookies(request), HttpStatus.OK);
-    }
 
     @GetMapping("/is_admin")
     public ResponseEntity<?> isAdmin(HttpServletRequest request){
