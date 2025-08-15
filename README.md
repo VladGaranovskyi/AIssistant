@@ -109,7 +109,7 @@ id : ObjectId
 name : ERole enum (ROLE_USER, ROLE_ASSISTANT, ROLE_ADMIN)
 
 ## 📬 Payloads
-AddPersonalDataRequest 📝
+### AddPersonalDataRequest 📝
 
 Used to update user personal info.
 
