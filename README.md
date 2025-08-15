@@ -44,3 +44,124 @@ This application implements **JWT-based authentication** with **role-based acces
       ROLE_ASSISTANT,
       ROLE_ADMIN
   }
+
+🛠 AIssistant IT Ticket System API
+
+An IT ticketing system using Spring Boot + MongoDB, with LLM-powered ticket tagging and automatic assignment to IT Assistants based on expertise probability. 🤖✨
+
+## 📦 Models
+### User 👤
+
+Represents users of the system.
+
+Fields:
+
+id : ObjectId
+
+username : String
+
+email : String
+
+password : String (hashed, ignored in JSON) 🔒
+
+name : String
+
+bio : String
+
+expertiseTags : Map<String, Double> — tag → probability 📊
+
+tickets : List<Ticket> — solved tickets ✅
+
+roles : Set<Role> — roles of the user (ROLE_USER, ROLE_ASSISTANT, ROLE_ADMIN)
+
+### Ticket 🎫
+
+Represents a ticket submitted by a user.
+
+Fields:
+
+id : ObjectId
+
+headline : String
+
+description : String
+
+date : Date 🗓
+
+issuer : User — who created the ticket 👤
+
+solver : User — assigned IT Assistant (nullable) 🛠
+
+generalCategory : String — main category
+
+tags : List<String> — tags extracted via LLM 🏷
+
+isSolved : Boolean — true if solved ✅
+
+### Role 🏷
+
+Represents a user role.
+
+Fields:
+
+id : ObjectId
+
+name : ERole enum (ROLE_USER, ROLE_ASSISTANT, ROLE_ADMIN)
+
+## 📬 Payloads
+AddPersonalDataRequest 📝
+
+Used to update user personal info.
+
+{
+  "name": "Vladik",
+  "bio": "network and software engineering expert",
+  "expertiseTags": {
+    "network": 0.9,
+    "software": 0.8,
+    "hardware": 0.1
+  }
+}
+
+### TicketCreationRequest 🆕
+
+Used to create a new ticket.
+
+{
+  "headline": "Internet is down",
+  "description": "Cannot connect to router in office",
+  "generalCategory": "network"
+}
+
+## 🛠 Controllers & API Endpoints
+### UserDataController 👤
+
+POST /api/userdata/add_personal_data ✏️
+Update user name, bio, and expertise tags. Requires authentication via JWT cookie.
+
+GET /api/userdata/my_user_data 🔍
+Returns logged-in user data.
+
+### TicketController 🎫
+
+POST /api/ticket/create/ticket ➕
+Create a new ticket.
+
+Flow:
+
+Verify user is logged in. 🔐
+
+Save ticket to database. 💾
+
+Call TicketMatcherService to assign best-fit assistants using LLM + MongoDB aggregation. 🤖
+
+Return created ticket. ✅
+
+GET /api/ticket/all 📃
+Returns all tickets.
+
+GET /api/ticket/{id} 🔎
+Returns details of a specific ticket.
+
+PATCH /api/ticket/{id}/mark_solved ✔️
+Marks ticket as solved and updates solver data.
