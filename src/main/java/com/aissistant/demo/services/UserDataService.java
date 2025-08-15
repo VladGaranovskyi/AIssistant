@@ -6,83 +6,88 @@ import com.aissistant.demo.payload.response.ErrorsResponse;
 import com.aissistant.demo.payload.response.MessageResponse;
 import com.aissistant.demo.repositories.UserRepository;
 import com.aissistant.demo.security.jwt.JwtUtils;
-import com.aissistant.demo.services.Auth.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 @Service
 public class UserDataService {
-    @Autowired
-    JwtUtils jwtUtils;
 
     @Autowired
-    UserRepository userRepository;
+    private JwtUtils jwtUtils;
 
+    @Autowired
+    private UserRepository userRepository;
 
-    public ResponseEntity<?> addPersonalData(AddPersonalDataRequest request, HttpServletRequest servletRequest){
-        // Check data for errors
+    public ResponseEntity<?> addPersonalData(AddPersonalDataRequest request, HttpServletRequest servletRequest) {
+
         Set<String> errors = new HashSet<>();
 
-        if(request.getFirstName().length() > 30){
-            errors.add("Your first name should be less than 30 characters");
-        }
-        if(request.getLastName().length() > 30){
-            errors.add("Your last name should be less than 30 characters");
+        // Basic validation
+        if (request.getName() == null || request.getName().length() > 30) {
+            errors.add("Your name should be non-null and less than 30 characters");
         }
 
-        // Get cookie
+        if (request.getBio() == null || request.getBio().length() > 500) {
+            errors.add("Your bio should be non-null and less than 500 characters");
+        }
+
+        if (request.getExpertiseTags() == null || request.getExpertiseTags().isEmpty()) {
+            errors.add("Expertise tags cannot be empty");
+        }
+
+        // Get JWT from cookie
         String cookie = jwtUtils.getJwtFromCookies(servletRequest);
-        if(cookie == null){
+        if (cookie == null) {
             errors.add("You are not logged in");
         }
-        String email = jwtUtils.getEmailFromJwtToken(cookie);
 
-        if(errors.toArray().length > 0){
-            return ResponseEntity.badRequest()
-                    .body(new ErrorsResponse(errors));
+        if (!errors.isEmpty()) {
+            return ResponseEntity.badRequest().body(new ErrorsResponse(errors));
         }
 
+        String email = jwtUtils.getEmailFromJwtToken(cookie);
 
-        // Check user Data
-        Optional<User> user = userRepository.findByEmail(email);
-        if(isPersonalDataEqual(request, user)){
+        // Find user
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) {
+            errors.add("User not found");
+            return ResponseEntity.badRequest().body(new ErrorsResponse(errors));
+        }
+
+        User user = optionalUser.get();
+
+        // Check if nothing changed
+        if (isUserDataEqual(request, user)) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse("You didn't change the data yet tried to edit it"));
         }
-        // Update user Data
-//        mongoTemplate.update(User.class)
-//                .matching(Criteria.where("email").is(email))
-//                .apply(new Update().set("firstName", request.getFirstName()).set("lastName", request.getLastName())
-//                        .set("age", request.getAge()).set("avatarId", request.getAvatarId()))
-//                .first();
-        user.get().setFirstName(request.getFirstName());
-        user.get().setLastName(request.getLastName());
-        user.get().setAge(request.getAge());
-        user.get().setAvatarId(request.getAvatarId());
 
-        userRepository.save(user.get());
+        // Update user fields directly
+        user.setName(request.getName());
+        user.setBio(request.getBio());
 
-        return ResponseEntity.ok(new MessageResponse("added personal information"));
+        // Replace expertiseTags map
+        Map<String, Double> expertiseTags = request.getExpertiseTags();
+        user.setExpertiseTags(expertiseTags);
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponse("Personal data updated successfully"));
     }
 
+    private boolean isUserDataEqual(AddPersonalDataRequest request, User user) {
 
+        boolean sameName = user.getName() != null && user.getName().equals(request.getName());
+        boolean sameBio = user.getBio() != null && user.getBio().equals(request.getBio());
+        boolean sameExpertise = user.getExpertiseTags() != null && user.getExpertiseTags().equals(request.getExpertiseTags());
 
-    private boolean isPersonalDataEqual(AddPersonalDataRequest request, Optional<User> user){
-        return user.get().getFirstName() != null &&
-                user.get().getLastName() != null &&
-                user.get().getAge() != 0 &&
-                user.get().getAvatarId() != 0 &&
-                user.get().getFirstName().equals(request.getFirstName()) &&
-                user.get().getLastName().equals(request.getLastName()) &&
-                user.get().getAge() == request.getAge() &&
-                user.get().getAvatarId() == request.getAvatarId();
+        return sameName && sameBio && sameExpertise;
     }
-
 }

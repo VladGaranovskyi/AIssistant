@@ -1,54 +1,46 @@
 package com.aissistant.demo.payload.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @AllArgsConstructor
 @NoArgsConstructor
 public class AddPersonalDataRequest {
-    private int age;
+    @NotNull
+    private String name;
 
-    private int avatarId;
+    @NotNull
+    private String bio;
 
-    @NotBlank
-    @Size(max=30)
-    private String firstName;
+    @NotNull
+    private Map<String, Double> expertiseTags;
 
-    @NotBlank
-    @Size(max=30)
-    private String lastName;
-
-    public int getAvatarId() {
-        return avatarId;
+    public String getName() {
+        return name;
     }
 
-    public void setAvatarId(int avatarId) {
-        this.avatarId = avatarId;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public int getAge() {
-        return age;
+    public String getBio() {
+        return bio;
     }
 
-    public void setAge(int age) {
-        this.age = age;
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public Map<String, Double> getExpertiseTags() {
+        return expertiseTags;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setExpertiseTags(Map<String, Double> expertiseTags) {
+        this.expertiseTags = expertiseTags;
     }
 }

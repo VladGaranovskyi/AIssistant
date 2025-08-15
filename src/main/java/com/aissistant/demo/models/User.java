@@ -12,6 +12,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Document(collection = "users")
@@ -35,46 +37,46 @@ public class User {
     @JsonIgnore
     private String password;
 
-    @Size(max=30)
-    private String firstName;
+    private String name;
+    private String bio;
 
-    @Size(max=30)
-    private String lastName;
+    // Map of tag -> probability
+    private Map<String, Double> expertiseTags;
 
-    private int age;
+    @DBRef
+    @JsonIgnore
+    private List<Ticket> tickets; // One-to-many solved tickets
 
-    private int avatarId;
-
-    public int getAvatarId() {
-        return avatarId;
+    public String getName() {
+        return name;
     }
 
-    public void setAvatarId(int avatarId) {
-        this.avatarId = avatarId;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public String getBio() {
+        return bio;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
-    public String getLastName() {
-        return lastName;
+    public Map<String, Double> getExpertiseTags() {
+        return expertiseTags;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setExpertiseTags(Map<String, Double> expertiseTags) {
+        this.expertiseTags = expertiseTags;
     }
 
-    public int getAge() {
-        return age;
+    public List<Ticket> getTickets() {
+        return tickets;
     }
 
-    public void setAge(int age) {
-        this.age = age;
+    public void setTickets(List<Ticket> tickets) {
+        this.tickets = tickets;
     }
 
     @DBRef
