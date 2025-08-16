@@ -4,21 +4,14 @@ import com.aissistant.demo.models.Ticket;
 import com.aissistant.demo.models.User;
 import com.aissistant.demo.repositories.TicketRepository;
 import com.aissistant.demo.repositories.UserRepository;
-import com.aissistant.demo.services.LLMService;
+import com.aissistant.demo.services.LLMService.LLMService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Service
 public class TicketService {
