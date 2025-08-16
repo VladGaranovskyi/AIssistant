@@ -1,0 +1,30 @@
+You are given:
+- Subject user profile: the person we are ranking for.
+- Candidate users: a list of users (each with at least userId and any available fields).
+- Scoring rubric: criteria that define what "good match" means.
+
+Task
+Score each candidate user relative to the subject according to the rubric, then return a ranked list.
+
+Requirements
+- Produce a numeric score in [0,1] for each candidate (higher = better).
+- Use dense ranking ("1,2,2,3..."): ties share the same rank; the next distinct score increments rank by 1.
+- Tie-breaker: when scores are equal, order by smaller userId first.
+- Do not invent users. Only return candidates whose userId is provided.
+- Output JSON only, matching the schema below — no extra text.
+
+Output JSON schema
+{
+  "subjectUserId": "<number>",
+  "ranks": [
+    { "userId": "<number>", "score": "<number 0..1>", "rank": "<integer>" }
+  ],
+  "meta": {
+    "tieStrategy": "dense",
+    "rubricVersion": "<string>",
+    "promptHash": "<string>"
+  }
+}
+Inputs
+
+

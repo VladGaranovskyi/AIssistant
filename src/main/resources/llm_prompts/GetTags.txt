@@ -1,0 +1,16 @@
+You are given a piece of text describing a problem.
+
+Task
+Generate a list of general problem categories (tags) that best capture the main themes of the text.
+
+Requirements
+- Tags should be concise, 1–3 words each.
+- Tags must be general and reusable, not overly specific to the example.
+- All tags must be lowercase.
+- Separate tags with commas in a single string.
+- Do not add explanations, just output the tags string.
+
+
+Input text:
+
+
